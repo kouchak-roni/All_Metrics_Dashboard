@@ -1,11 +1,9 @@
 # Required Packages
 import streamlit as st
-from get_data import GET_DATA
-from dashboard_metrics import dashboard_stc, dashboard_flashing_indicator
 import plotly.express as px
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
-import pandas as pd
+from plot_metrics import plot_stc, plot_flashing_indicator
 
 # Configuration of Webpage
 st.set_page_config(page_title = 'Metrics Dashboard', layout = 'wide')
@@ -27,29 +25,19 @@ if metric == 'The Scaff Trend Cycle':
 	input_title = st.sidebar.text_input('Enter a Title for your plot')
 	button = st.sidebar.button('Click Here to Get the Plot for The Scaff Trend') # Creating button
 	if button:
-		# getting the data for coin and timeframe
-		data_object = GET_DATA(coin_symbol_dict[coin], time_frame) 
-		data = data_object.get_data()
 		short_term_period = int(short_term_period)
 		long_term_period = int(long_term_period)
-		scaff_trend_object = dashboard_stc(data, short_term_period, long_term_period) 
-		scaff_tuple = scaff_trend_object.calculate_stc() # Calculating required output for the plot
-		out = scaff_tuple[0]
-		another_out = scaff_tuple[1]
 		# Customizing the plot title
 		if input_title == '':
 			title = 'Schaff Trend Cycle Plot for ' + coin + ' for timeframe ' + time_frame
 		else:
 			title = input_title
 		# Creating the plot
-		fig1 = px.line(out.STC)
-		fig1.update_traces(line_color = 'red')
-		fig2 = px.line(another_out.Coin_Close_Price)
-		fig = make_subplots(specs=[[{"secondary_y": True}]])
-		fig.add_trace(fig1.data[0], secondary_y=False)
-		fig.add_trace(fig2.data[0], secondary_y=True)
-		fig.update_layout(title = title, width = 1600, height = 800)
+		plot_object = plot_stc(coin_symbol_dict[coin], time_frame, short_term_period, long_term_period)
+		fig = plot_object.plot_stc()
+		fig.update_layout(title = title, width = 1200, height = 600)
 		st.plotly_chart(fig)
+		st.download_button('Click here to download the Interactive Chart', fig.to_html(), title + '.html')
 	else:
 		st.write('Please enter the proper values and click on the button below to get your required plot')
 
@@ -64,42 +52,23 @@ if metric == 'The Flashing Indicator':
 	input_title = st.sidebar.text_input('Enter a Title for your plot')
 	button = st.sidebar.button('Click Here to Get the Plot for The Flashing Indicator') # creating button
 	if button:
-		# getting the data for coin and timeframe
-		data_object = GET_DATA(coin_symbol_dict[coin], time_frame)
-		data = data_object.get_data()
 		autocorrelation_period = int(autocorrelation_period)
 		ma_constant = int(ma_constant)
 		roc_period = int(roc_period)
 		bollinger_band_constant = int(bollinger_band_constant)
 		correlation = float(correlation)
-		flashing_indicator_object = dashboard_flashing_indicator(data, autocorrelation_period, ma_constant, roc_period, bollinger_band_constant)
-		flashing_indicator_tuple = flashing_indicator_object.calculate_flashing_indicator(correlation) # getting the outputs for the plot
-		final_df = flashing_indicator_tuple[0]
-		another_date_list = flashing_indicator_tuple[1]
-		another_roc_list = flashing_indicator_tuple[2]
-		# customizing the plot title
 		if input_title == '':
 			title = 'The Flashing Indicator for the ' + coin + ' for timeframe ' + time_frame
 		else:
 			title = input_title
 		# creating the plot
-		fig1 = px.line(final_df['Upper Band'])
-		fig1.update_traces(line_color = 'red')
-		fig2 = px.line(final_df['Lower Band'])
-		fig2.update_traces(line_color = 'green')
-		fig3 = px.line(final_df['ROC'])
-		fig3.update_traces(line_color = 'black')
-		fig = make_subplots(specs = [[{"secondary_y": True}]])
-		fig.add_trace(fig1.data[0], secondary_y = True)
-		fig.add_trace(fig2.data[0], secondary_y = True)
-		fig.add_trace(fig3.data[0], secondary_y = False)
-		fig.add_trace(go.Scatter(
-        	x = another_date_list,
-        	y = another_roc_list,
-        	name = 'Autocorrelation > ' + str(correlation),
-        	mode = 'markers',
-        	marker = dict(symbol = '1'))) # This is to add Flash in the plot
-		fig.update_layout(title = title, width = 1600, height = 800)
+		plot_object = plot_flashing_indicator(coin_symbol_dict[coin], time_frame, autocorrelation_period, bollinger_band_constant, ma_constant, roc_period, correlation)
+		fig = plot_object.plot_flashing_indicator()
+		fig.update_layout(title = title, width = 1200, height = 600)
 		st.plotly_chart(fig)
+		st.download_button('Click here to download the Interactive Chart', fig.to_html(), title + '.html')
 	else:
 		st.write('Please enter the proper values and click on the button below to get your required plot')
+
+
+
