@@ -1,22 +1,27 @@
 # Required Packages
+import datetime
 import streamlit as st
 import plotly.express as px
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
-from plot_metrics import plot_stc, plot_flashing_indicator
+from plot_metrics import plot_stc, plot_flashing_indicator, plot_dbsi
 
 # Configuration of Webpage
 st.set_page_config(page_title = 'Metrics Dashboard', layout = 'wide')
 # Coins to Get Data for
-coin_symbol_dict = {
+coin_symbol_dict_ccxt = {
 	'Bitcoin': 'BTC/USDT',
 	'Ethereum': 'ETH/USDT',
 	'Binance Coin': 'BNB/USDT'
 	}
-
-coin = st.sidebar.selectbox('Select Coin', coin_symbol_dict.keys()) # selecting the coin
+coin_symbol_dict_san = {
+	'Bitcoin': 'bitcoin',
+	'Ethereum': 'ethereum',
+	'Binance Coin': 'binance-coin'
+}
+coin = st.sidebar.selectbox('Select Coin', coin_symbol_dict_ccxt.keys()) # selecting the coin
 time_frame = st.sidebar.selectbox('Select Timeframe', ['1d', '4h', '1h']) # selecting time frame for data
-metric = st.sidebar.selectbox('Select the Metric', ['The Scaff Trend Cycle', 'The Flashing Indicator']) # selecting the metric name
+metric = st.sidebar.selectbox('Select the Metric', ['The Scaff Trend Cycle', 'The Flashing Indicator', 'Market Cipher DBSI']) # selecting the metric name
 # The Scaff Trend Cycle
 if metric == 'The Scaff Trend Cycle':
 	# inputs for the metric
@@ -33,7 +38,7 @@ if metric == 'The Scaff Trend Cycle':
 		else:
 			title = input_title
 		# Creating the plot
-		plot_object = plot_stc(coin_symbol_dict[coin], time_frame, short_term_period, long_term_period)
+		plot_object = plot_stc(coin_symbol_dict_ccxt[coin], time_frame, short_term_period, long_term_period)
 		fig = plot_object.plot_stc()
 		fig.update_layout(title = title, width = 1200, height = 600)
 		st.plotly_chart(fig)
@@ -62,9 +67,30 @@ if metric == 'The Flashing Indicator':
 		else:
 			title = input_title
 		# creating the plot
-		plot_object = plot_flashing_indicator(coin_symbol_dict[coin], time_frame, autocorrelation_period, bollinger_band_constant, ma_constant, roc_period, correlation)
+		plot_object = plot_flashing_indicator(coin_symbol_dict_ccxt[coin], time_frame, autocorrelation_period, bollinger_band_constant, ma_constant, roc_period, correlation)
 		fig = plot_object.plot_flashing_indicator()
 		fig.update_layout(title = title, width = 1200, height = 600)
+		st.plotly_chart(fig)
+		st.download_button('Click here to download the Interactive Chart', fig.to_html(), title + '.html')
+	else:
+		st.write('Please enter the proper values and click on the button below to get your required plot')
+
+# Market Cipher DBSI
+if metric == 'Market Cipher DBSI':
+	start_date = st.sidebar.date_input('Select the start date from when Data you want from')
+	input_title = st.sidebar.text_input('Enter a Title for your plot')
+	button = st.sidebar.button('Click Here to Get the Plot for DBSI Indicator')
+	if button:
+		if input_title == '':
+			title = 'DBSI Indicator for ' + coin + ' for timeframe ' + time_frame
+		else:
+			title = input_title
+		start_date = start_date.strftime('%Y-%m-%d')
+		#st.write(type(start_date))
+		#st.write(start_date)
+		plot_object = plot_dbsi(coin_symbol_dict_san[coin], time_frame, start_date)
+		fig = plot_object.plot_dbsi()
+		fig.update_layout(title = title, width = 1200, height = 600, xaxis_title = 'Timeline', xaxis = dict(showgrid = False, rangeslider = dict(visible = True), type = 'date'))
 		st.plotly_chart(fig)
 		st.download_button('Click here to download the Interactive Chart', fig.to_html(), title + '.html')
 	else:

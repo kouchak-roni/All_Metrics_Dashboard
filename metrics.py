@@ -1,6 +1,7 @@
 import pandas as pd
 from scipy.stats import pearsonr
 from math import sqrt
+import numpy as np
 
 
 # The Scaff Trend Cycle
@@ -112,4 +113,45 @@ class Flashing_Indicator:
 		out = (lower_band_list, upper_band_list)
 		return(out)
 
-	
+class DBSI:
+
+	def __init__(self, data):
+		self.data = data 
+
+	def dbsi_indicator(self, standard_length = 13, smoothing_length = 1, total_power_fast_l = 3, total_power_slow_l = 12):
+		average_price = self.data['close'].ewm(2/(standard_length+1)).mean()
+		bull_power_raw = self.data['high'] - average_price
+		bear_power_raw = self.data['low'] - average_price
+
+
+		bull_power = bull_power_raw.ewm(2/(smoothing_length + 1)).mean()
+		bear_power = bear_power_raw.ewm(2/(smoothing_length + 1)).mean()
+		total_power_raw = bull_power + bear_power
+
+		bulls_dominating = (self.data['high'] >= average_price) & (self.data['low'] >= average_price)
+		bears_dominating = (self.data['high'] <= average_price) & (self.data['low'] <= average_price)
+		bears_bulls_fighting = (self.data['high'] >= average_price) & (self.data['low'] <= average_price)
+
+		bull_power_absolute = bull_power_raw.abs().ewm(2/(smoothing_length + 1)).mean()
+		bear_power_absolute = bear_power_raw.abs().ewm(2/(smoothing_length + 1)).mean()
+		bull_power_percent = np.round(100*bull_power_absolute / (bull_power_absolute + bear_power_absolute))
+		bear_power_percent = 100 - bull_power_percent
+
+		total_power_fast = total_power_raw.ewm(2/(total_power_fast_l + 1)).mean()
+		total_power_slow = total_power_raw.ewm(2/(total_power_slow_l + 1)).mean()
+
+		crossover_fast_slow = (total_power_fast > total_power_slow) & (total_power_fast.shift(1) < total_power_slow.shift(1))
+		crossunder_fast_slow = (total_power_fast < total_power_slow) & (total_power_fast.shift(1) > total_power_slow.shift(1))
+
+		bulls_winning = bull_power_percent >= 50
+		bears_winning = bear_power_percent >= 50
+
+		bulls_take_over = bulls_dominating & ~bulls_dominating.shift(1).astype(bool)
+		bears_take_over = bears_dominating & ~bears_dominating.shift(1).astype(bool)
+
+		out = pd.DataFrame({'bull_perc': bull_power_percent, 'bear_perc': bear_power_percent,
+                         'crossover': crossover_fast_slow, 'crossunder': crossunder_fast_slow,
+                         'bulls_dominance': bulls_dominating, 'bears_dominance': bears_dominating})
+		return(out)
+
+

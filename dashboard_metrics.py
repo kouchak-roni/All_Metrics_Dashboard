@@ -1,4 +1,4 @@
-from metrics import STC, Flashing_Indicator
+from metrics import STC, Flashing_Indicator, DBSI
 import pandas as pd
 
 class dashboard_stc:
@@ -68,3 +68,15 @@ class dashboard_flashing_indicator:
 				another_roc_list.append(final_df.ROC[i])
 
 		return((final_df, another_date_list, another_roc_list))
+
+
+class dashboard_dbsi:
+
+	def __init__(self, data):
+		self.data = data 
+
+	def calculate_dbsi(self):
+		indicator_object = DBSI(self.data)
+		indicator_df = indicator_object.dbsi_indicator()
+		out = pd.concat((self.data, indicator_df), axis = 1)
+		return(out)

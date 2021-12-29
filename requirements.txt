@@ -1,4 +1,6 @@
 ccxt
+sanpy
+numpy
 pandas
 scipy
 streamlit
