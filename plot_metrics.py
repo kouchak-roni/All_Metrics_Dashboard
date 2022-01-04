@@ -1,9 +1,31 @@
 from get_data import GET_DATA_CCXT, GET_DATA_SAN
-from dashboard_metrics import dashboard_stc, dashboard_flashing_indicator, dashboard_dbsi
+from dashboard_metrics import dashboard_gapo, dashboard_stc, dashboard_flashing_indicator, dashboard_dbsi
 import plotly.express as px
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 import pandas as pd
+
+
+# plot for GAPO Index or GRI
+class plot_gapo:
+
+	def __init__(self, coin, timeframe, period):
+		self.coin = coin
+		self.timeframe = timeframe
+		self.period = period
+
+	def plot_gapo(self):
+		data_object = GET_DATA_CCXT(self.coin, self.timeframe) 
+		data = data_object.get_data()
+		plot_data = data_object.get_data()
+		gapo_object = dashboard_gapo(data, self.period)
+		gapo_list = gapo_object.calculate_gapo()
+		fig = make_subplots(specs=[[{"secondary_y": True}]])
+		fig.add_candlestick(x = plot_data['Date'], open = plot_data['Open'], high = plot_data['High'], low = plot_data['Low'], close = plot_data['Close'], secondary_y = False, name = "Price candles")
+		plot_data_date = list(plot_data['Date'])[:(1 - self.period)]
+		fig.add_trace(go.Scatter(x = plot_data_date, y = gapo_list, opacity = 0.2, name = f'GAPO', line_color = 'blue'), secondary_y = True)
+		return(fig)
+
 
 
 # plot for The Scaff Trend Cycle

@@ -4,7 +4,7 @@ import streamlit as st
 import plotly.express as px
 import plotly.graph_objs as go
 from plotly.subplots import make_subplots
-from plot_metrics import plot_stc, plot_flashing_indicator, plot_dbsi
+from plot_metrics import plot_gapo, plot_stc, plot_flashing_indicator, plot_dbsi
 
 # Configuration of Webpage
 st.set_page_config(page_title = 'Metrics Dashboard', layout = 'wide')
@@ -21,7 +21,28 @@ coin_symbol_dict_san = {
 }
 coin = st.sidebar.selectbox('Select Coin', coin_symbol_dict_ccxt.keys()) # selecting the coin
 time_frame = st.sidebar.selectbox('Select Timeframe', ['1d', '4h', '1h']) # selecting time frame for data
-metric = st.sidebar.selectbox('Select the Metric', ['The Scaff Trend Cycle', 'The Flashing Indicator', 'Market Cipher DBSI']) # selecting the metric name
+metric = st.sidebar.selectbox('Select the Metric', ['GAPO Index or GRI', 'The Scaff Trend Cycle', 'The Flashing Indicator', 'Market Cipher DBSI']) # selecting the metric name
+# Gopalkrishnan Range Index
+if metric == 'GAPO Index or GRI':
+	# inputs for the metric
+	period = st.sidebar.text_input('Write the Period to Calculate Gopalakrishnan Range Index(GAPO)')
+	input_title = st.sidebar.text_input('Enter a Title for your plot')
+	button = st.sidebar.button('Click Here to Get the Plot for The GAPO Index') # Creating button
+	if button:
+		period = int(period)
+		# Customizing the plot title
+		if input_title == '':
+			title = 'GAPO Index Plot for ' + coin + ' for timeframe ' + time_frame
+		else:
+			title = input_title
+		plot_object = plot_gapo(coin_symbol_dict_ccxt[coin], time_frame, period)
+		fig = plot_object.plot_gapo()
+		fig.update_layout(title = title, width = 1200, height = 600)
+		st.plotly_chart(fig)
+		st.download_button('Click here to download the Interactive Chart', fig.to_html(), title + '.html')
+	else:
+		st.write('Please enter the proper values and click on the button below to get your required plot')
+
 # The Scaff Trend Cycle
 if metric == 'The Scaff Trend Cycle':
 	# inputs for the metric

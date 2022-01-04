@@ -1,7 +1,28 @@
 import pandas as pd
 from scipy.stats import pearsonr
-from math import sqrt
+from math import sqrt, log
 import numpy as np
+
+
+# Gopalkrishnan Range Index
+class GAPO:
+
+	def __init__(self, data):
+		self.data = data
+
+	def create_df_list(self, period):
+		df_list = []
+		while(len(self.data) >= period):
+			df_list.append(self.data.head(period))
+			self.data.drop(self.data.index[0], axis = 0, inplace = True)
+		return(df_list)
+
+	def calculate_gapo(self, list_df, period):
+		min_max_diff_list = []
+		for i in list_df:
+			min_max_diff_list.append(max(i['High']) - min(i['Low']))
+			out_list = [log(i)/log(period) for i in min_max_diff_list]
+		return(out_list)
 
 
 # The Scaff Trend Cycle

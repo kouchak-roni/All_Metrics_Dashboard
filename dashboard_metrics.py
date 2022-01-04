@@ -1,5 +1,17 @@
-from metrics import STC, Flashing_Indicator, DBSI
+from metrics import GAPO, STC, Flashing_Indicator, DBSI
 import pandas as pd
+
+class dashboard_gapo:
+
+	def __init__(self, data, period):
+		self.data = data
+		self.period = period
+
+	def calculate_gapo(self):
+		gapo_object = GAPO(self.data)
+		dataframe_list = gapo_object.create_df_list(self.period)
+		gapo_list = gapo_object.calculate_gapo(dataframe_list, self.period)
+		return(gapo_list)
 
 class dashboard_stc:
 
